@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chess</title>
+  <meta name="description" content="Play chess in the browser, locally or online against people and AI agents. Full FIDE rules.">
+  <meta name="theme-color" content="#eef0f3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1217" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23161a22'/%3E%3Crect x='32' width='32' height='32' fill='%237d8fa6'/%3E%3Crect y='32' width='32' height='32' fill='%237d8fa6'/%3E%3Crect width='64' height='64' rx='14' fill='none' stroke='%23161a22' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23c08a2b'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+Symbols+2&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./" aria-label="Chess home">
+        <span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="wordmark">Chess</span>
+      </a>
+      <p id="mode-label" class="mode">Local game</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board-area" aria-label="Board">
+      <div class="plate" id="player-black">
+        <span class="chip b" aria-hidden="true"></span>
+        <span class="pname">Black</span>
+        <span class="pseat"></span>
+        <span class="material" aria-label="Captured pieces"></span>
+        <span class="flag" aria-hidden="true"></span>
+      </div>
+
+      <div class="board-wrap">
+        <div id="board" class="board" role="grid" aria-label="Chess board"></div>
+        <div id="result" class="result" hidden>
+          <div class="result-card">
+            <p class="result-score" id="result-score"></p>
+            <p class="result-text" id="result-text"></p>
+            <button id="result-new" class="btn primary" type="button">New game</button>
+            <button id="result-dismiss" class="btn ghost" type="button">View board</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="plate" id="player-white">
+        <span class="chip w" aria-hidden="true"></span>
+        <span class="pname">White</span>
+        <span class="pseat"></span>
+        <span class="material" aria-label="Captured pieces"></span>
+        <span class="flag" aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="card status-card" aria-live="polite">
+        <div id="game-head" class="game-head" hidden>
+          <div class="game-head-row">
+            <span class="game-label">Game</span>
+            <code id="game-code" class="game-code"></code>
+            <button id="copy-id" class="btn small ghost" type="button" title="Copy game ID so others can join or watch">Copy ID</button>
+          </div>
+          <p id="matchup" class="matchup"></p>
+          <button id="take-seat" class="btn primary wide take-seat" type="button" hidden>Take the open seat</button>
+          <div class="agent-url">
+            <span class="agent-url-label">Invite link</span>
+            <div class="agent-url-row">
+              <code id="invite-url" class="agent-url-code"></code>
+              <button id="copy-invite" class="btn small" type="button">Copy</button>
+            </div>
+            <p id="invite-hint" class="agent-url-hint"></p>
+          </div>
+          <div class="agent-url">
+            <span id="agent-url-label" class="agent-url-label">Agent join URL</span>
+            <div class="agent-url-row">
+              <code id="agent-url" class="agent-url-code"></code>
+              <button id="copy-url" class="btn small" type="button">Copy</button>
+            </div>
+            <p id="agent-url-hint" class="agent-url-hint"></p>
+          </div>
+        </div>
+        <div class="turn-row">
+          <span id="turn-dot" class="dot"></span>
+          <span id="turn-text">White to move</span>
+          <span id="status-text" class="badge" hidden></span>
+        </div>
+        <div id="game-over" class="game-over" hidden></div>
+        <div class="controls">
+          <button id="new" class="btn primary" type="button">New game</button>
+          <button id="undo" class="btn" type="button" title="Undo (Ctrl/⌘ Z)">Undo</button>
+          <button id="flip" class="btn" type="button" title="Flip board (F)">Flip</button>
+          <button id="agree" class="btn" type="button">Agree draw</button>
+          <button id="resign" class="btn danger" type="button">Resign</button>
+          <button id="claim" class="btn wide" type="button" hidden></button>
+        </div>
+      </section>
+
+      <section class="card moves-card">
+        <h2>Moves</h2>
+        <div id="moves" class="moves" aria-label="Move list"></div>
+        <div id="move-nav" class="move-nav" hidden>
+          <button id="nav-start" class="btn small" type="button" title="First position (Home)" aria-label="First position">⏮</button>
+          <button id="nav-back" class="btn small" type="button" title="Previous move (←)" aria-label="Previous move">◀</button>
+          <span id="nav-status" class="nav-status" aria-live="polite"></span>
+          <button id="nav-play" class="btn small" type="button" title="Play / pause (Space)" aria-label="Play">⏵</button>
+          <button id="nav-forward" class="btn small" type="button" title="Next move (→)" aria-label="Next move">▶</button>
+          <button id="nav-live" class="btn small" type="button" title="Latest position (End)" aria-label="Latest position">⏭</button>
+        </div>
+      </section>
+
+      <details class="card online-card" id="online-card" open>
+        <summary><h2>Play online</h2><span id="live" class="live" hidden><span class="live-dot"></span><span id="live-text">Offline</span></span></summary>
+        <div class="online-body">
+          <p class="lobby intro">Create a game to get an invite link for another player and a join URL for AI agents. Choose “Neither” to set up a game between two agents and watch.</p>
+          <div class="field lobby">
+            <label for="name">Your name</label>
+            <input id="name" type="text" value="" placeholder="Guest" maxlength="40" autocomplete="nickname">
+          </div>
+          <div class="field lobby">
+            <label for="color">Your colour</label>
+            <div class="row">
+              <select id="color">
+                <option value="w">White</option>
+                <option value="b">Black</option>
+                <option value="">Random</option>
+                <option value="none">Neither, agents play</option>
+              </select>
+              <button id="create" class="btn primary" type="button">Create game</button>
+            </div>
+          </div>
+          <div class="field lobby">
+            <label for="open-games">Open games</label>
+            <select id="open-games"><option value="">Searching…</option></select>
+            <div class="row">
+              <button id="join" class="btn" type="button">Join</button>
+              <button id="watch" class="btn" type="button">Watch</button>
+            </div>
+          </div>
+          <button id="leave" class="btn wide" type="button" hidden>Leave online game</button>
+          <div class="field server-field">
+            <label for="server">Game server</label>
+            <input id="server" type="url" value="http://127.0.0.1:8791" spellcheck="false">
+          </div>
+          <p id="game-id" class="hint"></p>
+        </div>
+      </details>
+
+      <section class="card" id="history-card">
+        <h2>Past games</h2>
+        <ol id="past-games" class="past-games" aria-label="Saved games"></ol>
+      </section>
+
+      <section class="card" id="activity-card" hidden>
+        <h2>Activity</h2>
+        <ol id="activity" class="activity" aria-label="Live activity"></ol>
+      </section>
+
+      <section class="card">
+        <h2>Position</h2>
+        <div class="fen-row">
+          <code id="fen" class="fen"></code>
+          <button id="copy" class="btn small" type="button">Copy FEN</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <p>Full FIDE rules: castling, en passant, promotion, repetition and move-count draws. Agents can play over the HTTP API or through <code>window.chess</code>.</p>
+  </footer>
+
+  <dialog id="promo-dialog" class="promo-dialog" aria-labelledby="promo-title">
+    <form method="dialog">
+      <p class="promo-title" id="promo-title">Promote pawn to</p>
+      <div class="promo-choices" id="promo-choices"></div>
+      <button class="btn small ghost" value="cancel" type="submit">Cancel</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="ui.js"></script>
+</body>
+</html>

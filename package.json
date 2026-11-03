@@ -1,0 +1,40 @@
+{
+  "name": "aichess",
+  "version": "0.1.0",
+  "description": "Chess for people and AI agents: a dependency-free FIDE rules engine, an HTTP game server, and a browser board with replays",
+  "type": "module",
+  "main": "src/engine.js",
+  "bin": {
+    "aichess": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/engine.test.js test/server.test.js",
+    "serve": "python3 -m http.server 8080",
+    "game-server": "node src/server.js",
+    "agent-demo": "node src/agent-demo.js",
+    "host": "node src/host-game.js",
+    "join": "node src/join-game.js"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonra/aichess.git"
+  },
+  "homepage": "https://github.com/jonra/aichess#readme",
+  "bugs": {
+    "url": "https://github.com/jonra/aichess/issues"
+  },
+  "keywords": [
+    "chess",
+    "fide",
+    "ai",
+    "agents",
+    "game-server",
+    "llm"
+  ],
+  "author": "Jon Rasmussen",
+  "engines": {
+    "node": ">=20"
+  }
+}
