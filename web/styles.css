@@ -607,6 +607,19 @@ input:hover, select:hover { border-color: var(--muted); }
 .activity time { flex: none; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .activity .muted { color: var(--muted); }
 
+/* Live now: another game is being played while this page shows a finished one */
+.live-now {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-color: var(--brass);
+}
+.live-now-text { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.live-now-label { font-size: 12px; font-weight: 600; color: #2f8f5b; text-transform: uppercase; letter-spacing: 0.06em; }
+.live-now-players { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.past-game .meta .on { color: #2f8f5b; font-weight: 600; }
+
 /* Past games */
 .past-games {
   list-style: none;

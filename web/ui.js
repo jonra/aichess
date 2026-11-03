@@ -704,14 +704,16 @@ async function refreshHistory() {
     delete list.dataset.html;
     return;
   }
+  renderLiveNow(games);
   const html = games.map((g) => {
     const moves = Math.ceil(g.plies / 2);
-    const state = g.over ? (REASON[g.reason] ?? g.reason) : 'In progress';
-    const meta = [state, `${moves} move${moves === 1 ? '' : 's'}`, timeAgo(g.updatedAt)].filter(Boolean).join(' · ');
+    const state = g.over ? (REASON[g.reason] ?? g.reason) : isRunning(g) ? 'Live' : 'Unfinished';
+    const meta = [state, `${moves} move${moves === 1 ? '' : 's'}`, timeAgo(g.updatedAt)].filter(Boolean).map(escapeHtml).join(' · ')
+      .replace(/^Live/, '<span class="on">Live</span>');
     return `<li><button class="past-game${g.gameId === online.gameId ? ' current' : ''}" type="button" data-game="${escapeHtml(g.gameId)}" title="Replay game ${escapeHtml(g.gameId)}">
       <span class="players">${escapeHtml(g.white ?? 'open seat')} vs ${escapeHtml(g.black ?? 'open seat')}</span>
       <span class="score">${g.over ? escapeHtml(g.result.replace('1/2-1/2', '½–½')) : '…'}</span>
-      <span class="meta">${escapeHtml(meta)}</span>
+      <span class="meta">${meta}</span>
     </button></li>`;
   }).join('');
   // rebuild only on change, so keyboard focus in the list isn't lost every refresh
@@ -719,6 +721,29 @@ async function refreshHistory() {
     list.innerHTML = html;
     list.dataset.html = html;
   }
+}
+
+// A game counts as being played when both seats are taken and it changed in the last 10 minutes.
+const isRunning = (g) => !g.over && g.white && g.black && Date.now() - new Date(g.updatedAt) < 10 * 60 * 1000;
+let liveNowId = null;
+
+// Offers the newest running game when this page shows no game, or a finished one it isn't seated in.
+function renderLiveNow(games) {
+  const v = online.view;
+  const idle = !isOnline() ? !local.moves.length || Boolean(local.result) : !online.token && Boolean(v?.status?.over);
+  const next = idle ? games.find((g) => isRunning(g) && g.gameId !== online.gameId) : null;
+  liveNowId = next?.gameId ?? null;
+  $('live-now').hidden = !next;
+  const moves = Math.ceil((next?.plies ?? 0) / 2);
+  if (next) $('live-now-players').textContent = `${next.white} vs ${next.black} · ${moves} move${moves === 1 ? '' : 's'}`;
+}
+
+function watchLive(gameId) {
+  follow($('server').value.replace(/\/$/, ''), gameId, null);
+  $('leave').hidden = false;
+  window.history.replaceState(null, '', inviteLink());
+  $('live-now').hidden = true;
+  refreshHistory();
 }
 
 function replayGame(gameId) {
@@ -868,6 +893,7 @@ $('nav-back').onclick = () => setReview((reviewPly ?? playedPly) - 1);
 $('nav-forward').onclick = () => setReview((reviewPly ?? playedPly) + 1);
 $('nav-live').onclick = () => setReview(Infinity);
 $('nav-play').onclick = togglePlay;
+$('live-now-watch').onclick = () => { if (liveNowId) watchLive(liveNowId); };
 $('past-games').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-game]');
   if (btn) replayGame(btn.dataset.game);
