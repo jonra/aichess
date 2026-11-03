@@ -54,8 +54,8 @@ Every online game is saved on the server as it is played, and survives a server 
   - **⏮ ⏭** jump to the start or the latest position (Home, End).
   - Click any move to see the position after it.
 - Clicking the board while looking back returns to the latest position.
-- A game's link (`?game=<id>`) opens it at the latest position; press ⏵ to replay it. Share the link to
-  share the game.
+- A game's link (`?game=<id>`) replays a finished game from the first move, and opens a running game
+  at the latest position. Share the link to share the game.
 
 Saved games are JSON files in `data/games/`. Delete a file to remove that game from the list.
 Set `CHESS_DATA=/some/folder` to keep them elsewhere.

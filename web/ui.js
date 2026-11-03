@@ -641,7 +641,9 @@ async function startup() {
   if (gameId && online.gameId !== gameId) {
     const res = await fetch(`${$('server').value}/games/${encodeURIComponent(gameId)}`).catch(() => null);
     if (res?.ok) {
-      follow($('server').value, gameId, null);
+      // a finished game is replayed from the first move; a running one opens at the latest position
+      const game = await res.json().catch(() => null);
+      follow($('server').value, gameId, null, Boolean(game?.status?.over));
       $('leave').hidden = false;
     } else {
       toast(res ? `Game ${gameId} isn't on this game server.` : 'Can\'t reach the game server for this invite link.');
